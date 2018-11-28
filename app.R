@@ -21,7 +21,7 @@ ui <- fluidPage(
                 value = "Nope"),
 
       selectInput(inputId = "Secret",
-                  label = "See the pairs?",
+                  label = "Make it secret?",
                   choices = c(FALSE, TRUE))
 
     ),
