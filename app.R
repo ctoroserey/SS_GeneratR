@@ -75,25 +75,27 @@ server <- function(input, output){
                        Gift_to = c(tail(m, n = 1), m[seq(length(m)-1)]))
     }
     
-    # If the person running it should be blinded to the pairs, create individual txt files
-    if (Secret) {
+    return(df)
+    
+  }
+  
+  # render the resulting table
+  output$view <- renderTable({
+    if (input$Secret) {
+      df <- xmaspairs(Members = unlist(strsplit(input$Members, ",")), 
+                Spouses = unlist(strsplit(input$Spouses, ",")))
+      
       for (i in seq(nrow(df))) {
         write.table(paste("Your secret santa is: ", df[i, 2], "!", sep = ""), 
                     file = paste(df[i,1],".txt", sep = ""),
                     row.names = F, 
                     col.names = F)
       }
-      # or for groups who don't care about social subtleties
     } else {
-      return(df)
+      xmaspairs(Members = unlist(strsplit(input$Members, ",")), 
+                Spouses = unlist(strsplit(input$Spouses, ",")),
+                Secret = input$Secret)
     }
-  }
-  
-  # render the resulting table
-  output$view <- renderTable({
-    xmaspairs(Members = unlist(strsplit(input$Members, ",")), 
-              Spouses = unlist(strsplit(input$Spouses, ",")),
-              Secret = input$Secret)
   })
   
 }
