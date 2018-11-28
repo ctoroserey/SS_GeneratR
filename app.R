@@ -17,17 +17,17 @@ ui <- fluidPage(
                 value = "A, B, C, D"),
       
       p("If you want to avoid specific pairs of people from gifting each other, 
-        write down some characteristic that pairs them. So, if A and B above should
+        write down some characteristic that pairs them below. So, if A and B above should
         not gift each other, write down: 1, 1, 2, 3 (they are grouped by the number 1). 
         If A/B and C/D come from the same households, you can say: 
-        House1, House1, House2, House2. (note: the number of entries has to match
+        1, 1, 2, 2. (note: the number of entries has to match
         the number of members)"),
       
       textInput(inputId = "Spouses",
                 label = "Spouse grouping:",
                 value = "Nope"),
       
-      p("If you want to keep it secret, a file for each member will be created telling them who they should gift"),
+      p("If you want to keep it secret, a file for each member will be created telling them who they should gift (they will be in a zip file called 'SecretSantaPairs')"),
       
       strong("Important: make sure the download path is ok before making it secret."),
       
@@ -44,6 +44,9 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
 
+      p("Welcome to yet another secret santa generator! The advantage of this one is that it gives you the option whether to keep the pairings secret or not,
+        as well as avoiding pairs of people who shold not gift each other! Perfect if you have inter-dimensional friends that can't physically interact with each other."),
+      
       # Output: HTML table with requested number of observations ----
       tableOutput("view")
 
@@ -101,15 +104,22 @@ server <- function(input, output){
     # If the final pairings should be secret, then write files for each person
     if (input$Secret) {
       #Pairing
-      df <- xmaspairs(Members = unlist(strsplit(input$Members, ",")), 
-                Spouses = unlist(strsplit(input$Spouses, ",")))
+      df <- xmaspairs(Members = unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), 
+                Spouses = unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ",")))
       # Write files per person indicating to whom they have to gift
+      owd <- setwd(input$Path)
+      on.exit(setwd(owd))
+      files <- list()
       for (i in seq(nrow(df))) {
         write.table(paste("Your secret santa is: ", df[i, 2], "!", sep = ""), 
                     file = paste(input$Path,"/",df[i,1],".txt", sep = ""),
                     row.names = F, 
                     col.names = F)
+        files[[i]] <- paste(df[i,1],".txt", sep = "")
       }
+      # Zip them and delete the individual ones
+      zip("SecretSantaPairs", unlist(files))
+      do.call(file.remove, files)
       # Just so people know that something happened
       return(paste("A file for each person has been downloaded to ", input$Path, "!", sep = ""))
     # Otherwise just display the output  
