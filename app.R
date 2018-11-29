@@ -37,7 +37,9 @@ ui <- fluidPage(
       
       selectInput(inputId = "Secret",
                   label = "Make it secret?",
-                  choices = c(FALSE, TRUE))
+                  choices = c(FALSE, TRUE)),
+      
+      submitButton(text = "Apply Changes", icon = NULL, width = NULL)
 
     ),
 
@@ -46,6 +48,8 @@ ui <- fluidPage(
 
       p("Welcome to yet another secret santa generator! The advantage of this one is that it gives you the option whether to keep the pairings secret or not,
         as well as avoiding pairs of people who shold not gift each other! Perfect if you have inter-dimensional friends that can't physically interact with each other."),
+      
+      textOutput("header"),
       
       # Output: HTML table with requested number of observations ----
       tableOutput("view")
@@ -121,7 +125,7 @@ server <- function(input, output){
       zip("SecretSantaPairs", unlist(files))
       do.call(file.remove, files)
       # Just so people know that something happened
-      return(paste("A file for each person has been downloaded to ", input$Path, "!", sep = ""))
+      return()
     # Otherwise just display the output  
     } else {
       xmaspairs(Members = unlist(strsplit(input$Members, ",")), 
@@ -129,6 +133,14 @@ server <- function(input, output){
                 Secret = input$Secret)
     }
   })
+  
+  output$header <- renderText(
+    if (input$Secret) {
+      paste("A file for each person has been downloaded to ", input$Path,"!", " Look for SecretSantaPairs.zip", sep = "")
+    } else {
+      "Here are the pairings."
+    }
+  )
   
 }
 
