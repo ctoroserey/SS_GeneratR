@@ -15,7 +15,7 @@ xmaspairs <- function(Members = 1, Spouses = 1, Secret = T) {
   if (length(Members) == 1) {stop("No members indicated...")}
   
   # If spouse pairing should be avoided..
-  if (length(Spouses) > 1) {
+  if (length(Spouses) == length(Members)) {
     
     Affiliated <- T
     
