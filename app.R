@@ -100,9 +100,14 @@ server <- function(input, output){
   # render the resulting table 
   output$view <- renderTable({
     
+      # Parse the strings
+      m <- unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ","))
+      s <- unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ","))
+      # Make sure the groupings don't break the code by having a group be over 50% of members
+      if(max(table(s)) > length(m)/2) {stop("A group can't be more than 50% of the total members...")}
       # Produce pairings to display
-      xmaspairs(Members = unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), 
-                Spouses = unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ",")),
+      xmaspairs(Members = m, 
+                Spouses = m,
                 Secret = input$Secret)
     
   })
@@ -115,10 +120,15 @@ server <- function(input, output){
     filename = function() {"SecretSantaPairs.zip"},
     
     # Prep the zip file 
-    content = function(file) {    
+    content = function(file) { 
+      # Parse the strings
+      m <- unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ","))
+      s <- unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ","))
+      # Make sure the groupings don't break the code by having a group be over 50% of members
+      if(max(table(s)) > length(m)/2) {stop("A group can't be more than 50% of the total members...")}
       #Pairing
-      df <- xmaspairs(Members = unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), 
-                      Spouses = unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ",")))
+      df <- xmaspairs(Members = m, 
+                      Spouses = s)
       # Write files per person indicating to whom they have to gift
       owd <- setwd(tempdir()) # temporary dir to store the files
       on.exit(setwd(owd))

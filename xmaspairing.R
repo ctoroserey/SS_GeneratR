@@ -17,9 +17,11 @@ xmaspairs <- function(Members = 1, Spouses = 1, Secret = T) {
   # If spouse pairing should be avoided..
   if (length(Spouses) == length(Members)) {
     
-    Affiliated <- T
+    # Prevent a single group to be more than 50% of members
+    if(max(table(Spouses)) > length(Members)/2) {stop("A group can't be more than 50% of the total members...")}
     
     # Iterate over possible pairings until no SOs are paired
+    Affiliated <- T
     while (Affiliated) {
       m <- sample(Members)
       df <- data.frame(Member = m,
