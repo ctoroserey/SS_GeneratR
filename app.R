@@ -3,6 +3,10 @@ library(shiny)
 ui <- fluidPage(
   
   titlePanel("Secret Santa GeneratR"),
+
+  p("Welcome to yet another secret santa generator! The advantage of this one is that it gives you the option 
+    to keep the pairings secret or not, as well as avoiding pairs of people who should not gift each other! 
+    Perfect if you have inter-dimensional friends that can't physically interact with each other."),
   
   #Sidebar layout with input and output definitions ----
   sidebarLayout(
@@ -18,11 +22,11 @@ ui <- fluidPage(
                 value = "A, B, C, D, E, F"),
       
       # Explanation of spouse matching
-      p("If you want to avoid specific pairs of people from gifting each other, 
+      p("If you want to prevent specific pairs of people from gifting each other, 
         write down some characteristic that pairs them below (in the order they're written above). 
         In the example below, A/B and C/D are part of 'Couple' and 'Couple2', respectively, and won't gift within couples; 
         but E and F have their own group and can give/receive with anyone 
-        (note that the number of entries must match with the number of members). 
+        (note that the number of entries must match the number of members). 
         Write 'NA' if you don't care about this."),
       
       # Set pairs to avoid
@@ -32,7 +36,7 @@ ui <- fluidPage(
       
       # Note on making it secret
       p("If you want to keep it secret, a file for each member will be created telling them who they should gift
-        based on a new, unseen pairing. Just text each person their file!"),
+        based on a new, unseen pairing. Just send each person their file!"),
       
       # and the respective download button for the zip file
       downloadButton("download", "Make Secret")
@@ -42,8 +46,8 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
 
-      p("Welcome to yet another secret santa generator! The advantage of this one is that it gives you the option to keep the pairings secret or not,
-        as well as avoiding pairs of people who shold not gift each other! Perfect if you have inter-dimensional friends that can't physically interact with each other."),
+      p("Here are the current santa pairs. Note that if you click on 'Make Secret' a completely new scheme will be 
+        produced that you won't see here."),
       
       # Output: HTML table with requested number of observations ----
       tableOutput("view")
