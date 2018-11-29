@@ -39,7 +39,9 @@ ui <- fluidPage(
                   label = "Make it secret?",
                   choices = c(FALSE, TRUE)),
       
-      submitButton(text = "Apply Changes", icon = NULL, width = NULL)
+      submitButton(text = "Apply Changes", icon = NULL, width = NULL),
+      
+      downloadButton("download", "Make Secret")
 
     ),
 
@@ -104,35 +106,32 @@ server <- function(input, output){
   
   # render the resulting table if Secret = F, otherwise display it
   output$view <- renderTable({
-    
-    # If the final pairings should be secret, then write files for each person
-    if (input$Secret) {
-      #Pairing
-      df <- xmaspairs(Members = unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), 
-                Spouses = unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ",")))
-      # Write files per person indicating to whom they have to gift
-      owd <- setwd(input$Path)
-      on.exit(setwd(owd))
-      files <- list()
-      for (i in seq(nrow(df))) {
-        write.table(paste("Your secret santa is: ", df[i, 2], "!", sep = ""), 
-                    file = paste(input$Path,"/",df[i,1],".txt", sep = ""),
-                    row.names = F, 
-                    col.names = F)
-        files[[i]] <- paste(df[i,1],".txt", sep = "")
-      }
-      # Zip them and delete the individual ones
-      zip("SecretSantaPairs", unlist(files))
-      do.call(file.remove, files)
-      # Just so people know that something happened
-      return()
-    # Otherwise just display the output  
-    } else {
+      # Produce pairings to display
       xmaspairs(Members = unlist(strsplit(input$Members, ",")), 
                 Spouses = unlist(strsplit(input$Spouses, ",")),
                 Secret = input$Secret)
-    }
   })
+  
+  output$download <- downloadHandler(
+    
+    filename = function() {"SecretSantaPairs.zip"},
+    
+    content = function(file) {    
+      #Pairing
+      df <- xmaspairs(Members = unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), 
+                      Spouses = unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ",")))
+      # Write files per person indicating to whom they have to gift
+      owd <- setwd(tempdir())
+      on.exit(setwd(owd))
+      files <- list()      
+      lapply(seq(nrow(df)), function(i) {
+        write.table(paste("Your secret santa is: ", df[i, 2], "!", sep = ""), 
+                    file = paste(df[i,1],".txt", sep = ""),
+                    row.names = F, 
+                    col.names = F)})
+      zip(file, paste(unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), ".txt", sep = ""))
+    }
+  )
   
   output$header <- renderText(
     if (input$Secret) {
