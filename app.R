@@ -1,4 +1,5 @@
 library(shiny)
+
 ui <- fluidPage(
   
   titlePanel("Secret Santa GeneratR"),
@@ -13,34 +14,27 @@ ui <- fluidPage(
       # Note: Changes made to the caption in the textInput control
       # are updated in the output area immediately as you type
       textInput(inputId = "Members",
-                label = "Group Members:",
-                value = "A, B, C, D"),
+                label = "Group member names:",
+                value = "A, B, C, D, E, F"),
       
+      # Explanation of spouse matching
       p("If you want to avoid specific pairs of people from gifting each other, 
-        write down some characteristic that pairs them below. So, if A and B above should
-        not gift each other, write down: 1, 1, 2, 3 (they are grouped by the number 1). 
-        If A/B and C/D come from the same households, you can say: 
-        1, 1, 2, 2. (note: the number of entries has to match
-        the number of members)"),
+        write down some characteristic that pairs them below (in the order they're written above). 
+        In the example below, A/B and C/D are part of 'Couple' and 'Couple2', respectively, and won't gift within couples; 
+        but E and F have their own group and can give/receive with anyone 
+        (note that the number of entries must match with the number of members). 
+        Write 'NA' if you don't care about this."),
       
+      # Set pairs to avoid
       textInput(inputId = "Spouses",
-                label = "Spouse grouping:",
-                value = "Nope"),
+                label = "Avoidance list:",
+                value = "Couple, Couple, Couple2, Couple2, S1, S2"),
       
-      p("If you want to keep it secret, a file for each member will be created telling them who they should gift (they will be in a zip file called 'SecretSantaPairs')"),
+      # Note on making it secret
+      p("If you want to keep it secret, a file for each member will be created telling them who they should gift
+        based on a new, unseen pairing. Just text each person their file!"),
       
-      strong("Important: make sure the download path is ok before making it secret."),
-      
-      textInput(inputId = "Path",
-                label = "Download path:",
-                value = "~/Downloads"),
-      
-      selectInput(inputId = "Secret",
-                  label = "Make it secret?",
-                  choices = c(FALSE, TRUE)),
-      
-      submitButton(text = "Apply Changes", icon = NULL, width = NULL),
-      
+      # and the respective download button for the zip file
       downloadButton("download", "Make Secret")
 
     ),
@@ -48,10 +42,8 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
 
-      p("Welcome to yet another secret santa generator! The advantage of this one is that it gives you the option whether to keep the pairings secret or not,
+      p("Welcome to yet another secret santa generator! The advantage of this one is that it gives you the option to keep the pairings secret or not,
         as well as avoiding pairs of people who shold not gift each other! Perfect if you have inter-dimensional friends that can't physically interact with each other."),
-      
-      textOutput("header"),
       
       # Output: HTML table with requested number of observations ----
       tableOutput("view")
@@ -62,6 +54,7 @@ ui <- fluidPage(
 
 server <- function(input, output){
   
+  
   # Function that does the pairings
   xmaspairs <- function(Members = 1, Spouses = 1, Secret = T) {
     
@@ -69,11 +62,6 @@ server <- function(input, output){
     # If your family would like to avoid pairing significant others,
     # define Spouses to be a vector of groupings (i.e. numeric).
     # The script will then iterate over pairings until no SOs are paired.
-    #
-    # To avoid unreliable smtp setups to send emails, 
-    # if Secret = T then .txt files will be created for each member with their secret santa.
-    # (This means that you still have to send each file to each member independently..sorry)
-    # Otherwise the pairings are returned as a data frame.
     
     # Make sure that members were provided..
     if (length(Members) == 1) {stop("No members indicated...")}
@@ -104,24 +92,31 @@ server <- function(input, output){
     
   }
   
-  # render the resulting table if Secret = F, otherwise display it
+  
+  # render the resulting table 
   output$view <- renderTable({
+    
       # Produce pairings to display
-      xmaspairs(Members = unlist(strsplit(input$Members, ",")), 
-                Spouses = unlist(strsplit(input$Spouses, ",")),
+      xmaspairs(Members = unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), 
+                Spouses = unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ",")),
                 Secret = input$Secret)
+    
   })
   
+  
+  # Download a zip file with each pair 
   output$download <- downloadHandler(
     
+    # Name of the download
     filename = function() {"SecretSantaPairs.zip"},
     
+    # Prep the zip file 
     content = function(file) {    
       #Pairing
       df <- xmaspairs(Members = unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), 
                       Spouses = unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ",")))
       # Write files per person indicating to whom they have to gift
-      owd <- setwd(tempdir())
+      owd <- setwd(tempdir()) # temporary dir to store the files
       on.exit(setwd(owd))
       files <- list()      
       lapply(seq(nrow(df)), function(i) {
@@ -129,17 +124,11 @@ server <- function(input, output){
                     file = paste(df[i,1],".txt", sep = ""),
                     row.names = F, 
                     col.names = F)})
-      zip(file, paste(unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), ".txt", sep = ""))
+      zip(file, paste(unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ",")), ".txt", sep = "")) # and zip
     }
+    
   )
   
-  output$header <- renderText(
-    if (input$Secret) {
-      paste("A file for each person has been downloaded to ", input$Path,"!", " Look for SecretSantaPairs.zip", sep = "")
-    } else {
-      "Here are the pairings."
-    }
-  )
   
 }
 
