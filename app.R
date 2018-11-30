@@ -73,9 +73,6 @@ server <- function(input, output){
     # define Spouses to be a vector of groupings (i.e. numeric).
     # The script will then iterate over pairings until no SOs are paired.
     
-    # Make sure that members were provided..
-    if (length(Members) == 1) {stop("No members indicated...")}
-    
     # Perform the actual pairing
     # If spouse pairing should be avoided..
     if (length(Spouses) == length(Members)) {
@@ -109,11 +106,13 @@ server <- function(input, output){
       # Parse the strings
       m <- unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ","))
       s <- unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ","))
+      # Make sure that enough members are entered
+      validate(need(length(m) > 1, "Not enough members!"))
       # Make sure the groupings don't break the code by having a group be over 50% of members
-      if(max(table(s)) > length(m)/2) {stop("A group can't be more than 50% of the total members...")}
+      validate(need(try(max(table(s)) <= length(m)/2), "A group can't have more than 50% of the members"))
       # Produce pairings to display
       xmaspairs(Members = m, 
-                Spouses = m,
+                Spouses = s,
                 Secret = input$Secret)
     
   })
@@ -131,7 +130,7 @@ server <- function(input, output){
       m <- unlist(strsplit(gsub(" ", "", input$Members, fixed=T), ","))
       s <- unlist(strsplit(gsub(" ", "", input$Spouses, fixed=T), ","))
       # Make sure the groupings don't break the code by having a group be over 50% of members
-      if(max(table(s)) > length(m)/2) {stop("A group can't be more than 50% of the total members...")}
+      validate(need(try(max(table(s)) < length(m)/2), "A group can't have more than 50% of the members"))
       #Pairing
       df <- xmaspairs(Members = m, 
                       Spouses = s)
