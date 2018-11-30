@@ -34,7 +34,7 @@ ui <- fluidPage(
                 label = "Avoidance list:",
                 value = "Couple, Couple, Couple2, Couple2, S1, S2"),
       
-      # Aply changes
+      # Apply changes
       submitButton("Update List"),
       
       # Empty space
