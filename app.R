@@ -34,6 +34,12 @@ ui <- fluidPage(
                 label = "Avoidance list:",
                 value = "Couple, Couple, Couple2, Couple2, S1, S2"),
       
+      # Aply changes
+      submitButton("Update List"),
+      
+      # Empty space
+      p(),
+      
       # Note on making it secret
       p("If you want to keep it secret, a file for each member will be created telling them who they should gift
         based on a new, unseen pairing. Just send each person their file!"),
